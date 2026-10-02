@@ -9,6 +9,7 @@
 - [ ] 第 0 章 热身：Agent 的真面目
   - [x] 第 1 课：Agent 就是一个 while 循环，问题出在"进度藏在内存里"（`docs/zh/architecture.md:11-18`）
 - [ ] 第 1 章 `types.py`：用枚举把状态写死（NodeStatus、RunState、合法转移表、ToolCall/ToolResult）
+  - [x] 第 2 课：`RunState` 四块状态牌，SUSPENDED = 主动放手并已落盘（`src/kernel/types.py:24-30`）
 - [ ] 第 2 章 `command.py`：节点跟调度器说话的唯一词汇（Goto、Send）
 - [ ] 第 3 章 `channels.py`：并发写同一个键怎么办（reducer、Channel、WaveWrites、AmbiguousWrite）
 - [ ] 第 4 章 `graph.py`：静态蓝图（Node、Edge、Plan、`ready()`、`sweep_skipped()`）
@@ -23,10 +24,11 @@
 
 ## 下一课
 
-第 2 课：框架的第一刀——把"跑到哪了"写成显式的枚举（`src/kernel/types.py` 的 `RunState`）。
+第 3 课：合法转移表 `_ALLOWED_TRANSITIONS`——四个状态之间哪些跳转被禁止、为什么（`src/kernel/types.py:33-41`）。先点评学员对第 2 课思考题（12 种跳转里哪些该禁止）的回答。
 
 ## 学习日志
 
 | 课 | 日期 | 一句话要点 |
 |---|---|---|
 | 1 | 2026-10-02 | Agent = 想 → 做 → 看结果 → 再想 的循环；框架存在的理由是把内存里隐式的进度变成显式、可存盘的数据。 |
+| 2 | 2026-10-02 | 第 1 课答题：存账（messages）+ 待执行的工具调用；补充：循环位置、工具是否已执行（副作用，at-least-once）。RunState 用 StrEnum：防拼错、防非法组合、天然可序列化。 |
