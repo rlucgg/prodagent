@@ -10,6 +10,7 @@
   - [x] 第 1 课：Agent 就是一个 while 循环，问题出在"进度藏在内存里"（`docs/zh/architecture.md:11-18`）
 - [ ] 第 1 章 `types.py`：用枚举把状态写死（NodeStatus、RunState、合法转移表、ToolCall/ToolResult）
   - [x] 第 2 课：`RunState` 四块状态牌，SUSPENDED = 主动放手并已落盘（`src/kernel/types.py:24-30`）
+  - [x] 第 3 课：合法转移表 `_ALLOWED_TRANSITIONS`，16 种跳法只放行 5 种（`src/kernel/types.py:36-41`）
 - [ ] 第 2 章 `command.py`：节点跟调度器说话的唯一词汇（Goto、Send）
 - [ ] 第 3 章 `channels.py`：并发写同一个键怎么办（reducer、Channel、WaveWrites、AmbiguousWrite）
 - [ ] 第 4 章 `graph.py`：静态蓝图（Node、Edge、Plan、`ready()`、`sweep_skipped()`）
@@ -24,7 +25,7 @@
 
 ## 下一课
 
-第 3 课：合法转移表 `_ALLOWED_TRANSITIONS`——四个状态之间哪些跳转被禁止、为什么（`src/kernel/types.py:33-41`）。先点评学员对第 2 课思考题（12 种跳转里哪些该禁止）的回答。
+第 4 课：守门员 `Run._transition`——转移表由谁执法、非法跳转怎么当场炸（`src/kernel/run.py:197-202`）。先点评学员对第 3 课思考题（终点为什么不能复活、想重跑怎么办）的回答。
 
 ## 学习日志
 
@@ -32,3 +33,4 @@
 |---|---|---|
 | 1 | 2026-10-02 | Agent = 想 → 做 → 看结果 → 再想 的循环；框架存在的理由是把内存里隐式的进度变成显式、可存盘的数据。 |
 | 2 | 2026-10-02 | 第 1 课答题：存账（messages）+ 待执行的工具调用；补充：循环位置、工具是否已执行（副作用，at-least-once）。RunState 用 StrEnum：防拼错、防非法组合、天然可序列化。 |
+| 3 | 2026-10-04 | 第 2 课答题：学员以为"一切皆有可能"；实际 16 种跳法（含原地跳）只放行 5 种。终点 = 空 frozenset（死胡同）；SUSPENDED 不能直接 COMPLETED，必须先复工；SUSPENDED→FAILED 真实路径：同一波一个节点挂起、另一个节点炸了。 |
