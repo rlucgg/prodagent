@@ -116,16 +116,16 @@ class InProcessActivator:
         child = Run.child_of(parent_run, spec, task=task, input=input, llm=llm, tools=tools)
         # the delegation fact, on the parent's log: after a crash the child's
         # run_id lives here, so the child can be re-attached instead of orphaned
-        await self.scheduler._commit(
-            parent_run, DELEGATED, {"node": node_id, "child_run_id": child.run_id}
-        )
+        await self.scheduler.record_delegation(parent_run, child.run_id, node_id)
         await self.scheduler.drive(spec, child)
         # Report the child's terminal state honestly; the caller decides what it
         # means — SubPlanBody fails its node, an agent-as-tool raises HardToolError.
         # (The depth-guard RecursionError is a structural error raised above.)
+        # ``state`` is the RunState enum, not a magic string (StrEnum still
+        # compares equal to its text, so external callers are unaffected).
         result = {
             "run_id": child.run_id,
-            "state": str(child.state),
+            "state": child.state,
             "output": child.final_output,
             "shared": child.shared,
         }
@@ -352,8 +352,14 @@ class Scheduler:
         await self._commit(run, NODE_STARTED, {"node": key})  # apply marks + consumes
 
         async def record(kind: str, data: dict | None = None) -> None:
-            # Record a durable fact on this run's log (used for artifact pointers).
+            # The ledger's write side: append one durable fact to this run's log.
             await self._commit(run, kind, data)
+
+        async def facts() -> list[Event]:
+            # The ledger's read side: this run's facts so far, oldest first.
+            # The log belongs to the Scheduler; a body reaches it only through
+            # this pair — it never holds the ledger itself.
+            return await self.eventlog.events(run.run_id)
 
         ctx = NodeContext(
             run,
@@ -364,6 +370,7 @@ class Scheduler:
             bus=self.bus,
             blobs=self.blobs,
             record=record,
+            facts=facts,
             resume_value=resume_value,
         )
         try:
@@ -509,6 +516,19 @@ class Scheduler:
         if len(values) == 1:
             return next(iter(values.values()))
         return values
+
+    # — narrow public seam for sub-agent activators —
+    async def record_delegation(
+        self, parent_run: Run, child_run_id: str, node_id: str = ""
+    ) -> None:
+        """Record one DELEGATED fact linking ``node_id`` to its new child Run.
+
+        The seam for pluggable SubagentPort implementations: the default
+        in-process activator sits in this file and could reach _commit, but a
+        remote one (A2A/RPC) still must land this fact on the parent's ledger
+        — the crash-reattach anchor — and this is its only public way to.
+        """
+        await self._commit(parent_run, DELEGATED, {"node": node_id, "child_run_id": child_run_id})
 
     # — commit: the only way facts are born —
     async def _commit(self, run: Run, kind: str, data: dict | None = None) -> None:
