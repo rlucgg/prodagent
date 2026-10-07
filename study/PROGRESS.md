@@ -26,7 +26,7 @@
 
 ## 下一课
 
-第 5 课：`NodeStatus`——每个步骤自己的状态牌（`src/kernel/types.py:13-20`），对比 RunState 多了 PENDING / SKIPPED。先点评学员对第 4 课思考题（`complete()` 里两行顺序导致非法调用也会改掉 final_output）的回答。
+第 5 课：`NodeStatus`——每个步骤自己的状态牌（`src/kernel/types.py:14-21`），对比 RunState 多了 PENDING / SKIPPED。先点评学员对第 4 课思考题（`complete()` 里两行顺序导致非法调用也会改掉 final_output）的回答。
 
 ## 学习日志
 
